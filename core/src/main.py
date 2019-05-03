@@ -21,6 +21,7 @@ import apps.ripple
 import apps.cardano
 import apps.tezos
 import apps.eos
+import apps.binance
 
 if __debug__:
     import apps.debug
@@ -40,6 +41,7 @@ apps.ripple.boot()
 apps.cardano.boot()
 apps.tezos.boot()
 apps.eos.boot()
+apps.binance.boot()
 if __debug__:
     apps.debug.boot()
 else:
