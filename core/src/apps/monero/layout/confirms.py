@@ -194,3 +194,30 @@ async def live_refresh_step(ctx, current):
     if current is None:
         return
     await Popup(LiveRefreshStep(current))
+
+
+async def show_address(
+    ctx, address: str, desc: str = "Confirm address", network: str = None
+):
+    from apps.common.confirm import confirm
+    from trezor.messages import ButtonRequestType
+    from trezor.ui.button import ButtonDefault
+    from trezor.ui.scroll import Paginated
+
+    pages = []
+    page_lines = common.paginate_lines(common.split_address(address), 5)
+
+    for i, lines in enumerate(page_lines):
+        text = Text(desc, ui.ICON_RECEIVE, ui.GREEN)
+        if network is not None:
+            text.normal("%s network" % network)
+        text.mono(*lines)
+        pages.append(text)
+
+    return await confirm(
+        ctx,
+        Paginated(pages),
+        code=ButtonRequestType.Address,
+        cancel="QR",
+        cancel_style=ButtonDefault,
+    )
