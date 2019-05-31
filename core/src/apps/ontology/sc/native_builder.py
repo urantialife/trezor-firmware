@@ -1,3 +1,5 @@
+from ubinascii import unhexlify
+
 from trezor import wire
 
 from .. import writer
@@ -13,15 +15,15 @@ class ParamStruct:
         self.arr = arr
 
 
-def build_native_call(funcName: str, params: list, contract: str) -> bytes:
+def build_native_call(func_name: str, params: list, contract: str) -> bytes:
     """
     Builds native contract call
     """
     ret = bytearray()
 
     _write_native_code_script(ret, params)
-    builder.write_push_bytes(ret, bytes(funcName, "ascii"))
-    builder.write_push_hexstr(ret, contract)
+    builder.write_push_bytes(ret, func_name.encode())
+    builder.write_push_bytes(ret, unhexlify(contract))
     builder.write_push_int(ret, 0)
     writer.write_byte(ret, opcode.SYSCALL)
     builder.write_push_bytes(ret, b"Ontology.Native.Invoke")
@@ -35,7 +37,7 @@ def _write_native_code_script(ret: bytearray, arr: list) -> None:
     """
     for val in reversed(arr):
         if isinstance(val, str):
-            builder.write_push_hexstr(ret, val)
+            builder.write_push_bytes(ret, unhexlify(val))
 
         elif isinstance(val, (bytes, bytearray)):
             builder.write_push_bytes(ret, val)
@@ -86,7 +88,7 @@ def _write_code_param_script(ret: bytearray, obj) -> None:
     Writes native code param script from supplied data
     """
     if isinstance(obj, str):
-        builder.write_push_hexstr(ret, obj)
+        builder.write_push_bytes(ret, unhexlify(obj))
 
     elif isinstance(obj, (bytes, bytearray)):
         builder.write_push_bytes(ret, obj)

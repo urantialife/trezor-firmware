@@ -8,7 +8,7 @@ from trezor.messages.OntologyTxAttribute import OntologyTxAttribute
 from trezor.messages.OntologyWithdrawOng import OntologyWithdrawOng
 
 from . import const as Const, writer
-from .helpers import get_hex_from_address
+from .helpers import get_bytes_from_address
 from .sc.native_builder import ParamStruct, build_native_call
 
 
@@ -24,7 +24,7 @@ def serialize_tx(tx: OntologyTransaction, payload: bytes):
     writer.write_uint64(ret, tx.gas_price)
     writer.write_uint64(ret, tx.gas_limit)
 
-    payer = get_hex_from_address(tx.payer)
+    payer = get_bytes_from_address(tx.payer)
     writer.write_bytes(ret, payer)
 
     writer.write_bytes(ret, payload)
@@ -81,8 +81,8 @@ def _serialize_tx_attribute(ret: bytearray, attribute: OntologyTxAttribute):
 
 
 def _serialize_transfer_payload(transfer: OntologyTransfer):
-    from_address = get_hex_from_address(transfer.from_address)
-    to_address = get_hex_from_address(transfer.to_address)
+    from_address = get_bytes_from_address(transfer.from_address)
+    to_address = get_bytes_from_address(transfer.to_address)
     amount = transfer.amount
     contract = ""
 
@@ -94,14 +94,15 @@ def _serialize_transfer_payload(transfer: OntologyTransfer):
     struct = ParamStruct([from_address, to_address, amount])
     native_call = build_native_call("transfer", [[struct]], contract)
 
-    ret = bytearray()
+    # 9 is the maximum possible length of the uvarint prefix
+    ret = bytearray(len(native_call) + 9)
     writer.write_bytes_with_length(ret, native_call)
     return bytes(ret)
 
 
 def _serialize_withdraw_ong_payload(withdraw_ong: OntologyWithdrawOng):
-    from_address = get_hex_from_address(withdraw_ong.from_address)
-    to_address = get_hex_from_address(withdraw_ong.to_address)
+    from_address = get_bytes_from_address(withdraw_ong.from_address)
+    to_address = get_bytes_from_address(withdraw_ong.to_address)
     amount = withdraw_ong.amount
 
     struct = ParamStruct([from_address, Const.ONT_CONTRACT, to_address, amount])
@@ -113,7 +114,7 @@ def _serialize_withdraw_ong_payload(withdraw_ong: OntologyWithdrawOng):
 
 
 def _serialize_ont_id_register_payload(register: OntologyOntIdRegister):
-    ont_id = register.ont_id.encode("hex")
+    ont_id = register.ont_id.encode()
 
     struct = ParamStruct([ont_id, register.public_key])
     native_call = build_native_call(
@@ -126,13 +127,15 @@ def _serialize_ont_id_register_payload(register: OntologyOntIdRegister):
 
 
 def _serialize_ont_id_add_attributes_payload(add: OntologyOntIdAddAttributes):
-    ont_id = add.ont_id.encode("hex")
+    ont_id = add.ont_id.encode()
     attributes = add.ont_id_attributes
 
     arguments = [ont_id, len(attributes)]
 
     for attribute in attributes:
-        _serialize_ont_id_attribute(arguments, attribute)
+        arguments.append(attribute.key.encode())
+        arguments.append(attribute.type.encode())
+        arguments.append(attribute.value.encode())
 
     arguments.append(add.public_key)
 
@@ -142,9 +145,3 @@ def _serialize_ont_id_add_attributes_payload(add: OntologyOntIdAddAttributes):
     ret = bytearray()
     writer.write_bytes_with_length(ret, native_call)
     return bytes(ret)
-
-
-def _serialize_ont_id_attribute(arguments: list, attribute: OntologyOntIdAttribute):
-    arguments.append(attribute.key.encode("hex"))
-    arguments.append(attribute.type.encode("hex"))
-    arguments.append(attribute.value.encode("hex"))

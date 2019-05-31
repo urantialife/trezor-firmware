@@ -1,16 +1,18 @@
 from trezor.crypto.curve import nist256p1
 from trezor.messages.OntologyAddress import OntologyAddress
+from trezor.messages.OntologyGetAddress import OntologyGetAddress
 
-from .helpers import get_address_from_public_key
 
-from apps.common import seed
+from .helpers import CURVE, get_address_from_public_key, validate_full_path
+
+from apps.common import paths
 from apps.common.layout import show_address, show_qr
 
 
-async def get_address(ctx, msg):
-    address_n = msg.address_n or ()
-    node = await seed.derive_node(ctx, address_n, "nist256p1")
+async def get_address(ctx, msg: OntologyGetAddress, keychain):
+    await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n, CURVE)
 
+    node = keychain.derive(msg.address_n)
     seckey = node.private_key()
     public_key = nist256p1.publickey(seckey, True)
     address = get_address_from_public_key(public_key)

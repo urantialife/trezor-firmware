@@ -48,13 +48,6 @@ def write_push_bool(ret: bytearray, param: bool):
     Writes PUSH BOOL instruction
     """
     if param:
-        writer.write_byte(ret, opcode.PUSHT)
+        writer.write_byte(ret, opcode.PUSH1)
     else:
-        writer.write_byte(ret, opcode.PUSHF)
-
-
-def write_push_hexstr(ret: bytearray, param: str):
-    """
-    Writes PUSH BYTES instruction from hex string
-    """
-    write_push_bytes(ret, unhexlify(param))
+        writer.write_byte(ret, opcode.PUSH0)

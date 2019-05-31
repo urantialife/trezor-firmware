@@ -7,7 +7,7 @@ from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.ui.confirm import CONFIRMED, ConfirmDialog
 from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
 from trezor.ui.text import Text
-from trezor.utils import chunks
+from trezor.utils import chunks, format_amount
 
 from apps.common.confirm import require_confirm
 
@@ -55,11 +55,11 @@ async def require_confirm_ont_id_add_attributes(ctx, ont_id, public_key, attribu
 
 
 def format_amount_ont(value):
-    return "%s ONT" % (int(value))
+    return "%s %s" % (format_amount(amount, 0), "ONT")
 
 
 def format_amount_ong(value):
-    return "%s ONG" % (int(value) / 1000000000)
+    return "%s %s" % (format_amount(amount, 9), "ONG")
 
 
 def split_address(address):
