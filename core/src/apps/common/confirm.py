@@ -6,16 +6,22 @@ from trezor.ui.confirm import CONFIRMED, Confirm, HoldToConfirm
 if __debug__:
     from apps.debug import confirm_signal
 
+if False:
+    from typing import Any
+    from trezor import ui
+    from trezor.ui.confirm import ButtonContent, ButtonStyleType
+    from trezor.ui.loader import LoaderStyleType
+
 
 async def confirm(
-    ctx,
-    content,
-    code=ButtonRequestType.Other,
-    confirm=Confirm.DEFAULT_CONFIRM,
-    confirm_style=Confirm.DEFAULT_CONFIRM_STYLE,
-    cancel=Confirm.DEFAULT_CANCEL,
-    cancel_style=Confirm.DEFAULT_CANCEL_STYLE,
-):
+    ctx: wire.Context,
+    content: ui.Control,
+    code: int = ButtonRequestType.Other,
+    confirm: ButtonContent = Confirm.DEFAULT_CONFIRM,
+    confirm_style: ButtonStyleType = Confirm.DEFAULT_CONFIRM_STYLE,
+    cancel: ButtonContent = Confirm.DEFAULT_CANCEL,
+    cancel_style: ButtonStyleType = Confirm.DEFAULT_CANCEL_STYLE,
+) -> bool:
     await ctx.call(ButtonRequest(code=code), MessageType.ButtonAck)
 
     if content.__class__.__name__ == "Paginated":
@@ -33,13 +39,13 @@ async def confirm(
 
 
 async def hold_to_confirm(
-    ctx,
-    content,
-    code=ButtonRequestType.Other,
-    confirm=HoldToConfirm.DEFAULT_CONFIRM,
-    confirm_style=HoldToConfirm.DEFAULT_CONFIRM_STYLE,
-    loader_style=HoldToConfirm.DEFAULT_LOADER_STYLE,
-):
+    ctx: wire.Context,
+    content: ui.Control,
+    code: int = ButtonRequestType.Other,
+    confirm: ButtonContent = Confirm.DEFAULT_CONFIRM,
+    confirm_style: ButtonStyleType = Confirm.DEFAULT_CONFIRM_STYLE,
+    loader_style: LoaderStyleType = HoldToConfirm.DEFAULT_LOADER_STYLE,
+) -> bool:
     await ctx.call(ButtonRequest(code=code), MessageType.ButtonAck)
 
     if content.__class__.__name__ == "Paginated":
@@ -56,13 +62,13 @@ async def hold_to_confirm(
         return await ctx.wait(dialog) is CONFIRMED
 
 
-async def require_confirm(*args, **kwargs):
+async def require_confirm(*args: Any, **kwargs: Any) -> None:
     confirmed = await confirm(*args, **kwargs)
     if not confirmed:
         raise wire.ActionCancelled("Cancelled")
 
 
-async def require_hold_to_confirm(*args, **kwargs):
+async def require_hold_to_confirm(*args: Any, **kwargs: Any) -> None:
     confirmed = await hold_to_confirm(*args, **kwargs)
     if not confirmed:
         raise wire.ActionCancelled("Cancelled")

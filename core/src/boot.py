@@ -5,7 +5,7 @@ from apps.common import storage
 from apps.common.request_pin import request_pin
 
 
-async def bootscreen():
+async def bootscreen() -> None:
     ui.display.orientation(storage.get_rotation())
     while True:
         try:
@@ -27,7 +27,7 @@ async def bootscreen():
                 log.exception(__name__, e)
 
 
-async def lockscreen():
+async def lockscreen() -> None:
     label = storage.get_label()
     image = storage.get_homescreen()
     if not label:

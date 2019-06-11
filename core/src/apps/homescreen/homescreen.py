@@ -3,7 +3,7 @@ from trezor import config, io, loop, res, ui
 from apps.common import storage
 
 
-async def homescreen():
+async def homescreen() -> None:
     # render homescreen in dimmed mode and fade back in
     ui.backlight_fade(ui.BACKLIGHT_DIM)
     display_homescreen()
@@ -15,7 +15,7 @@ async def homescreen():
         await touch
 
 
-def display_homescreen():
+def display_homescreen() -> None:
     if not storage.is_initialized():
         label = "Go to trezor.io/start"
         image = None

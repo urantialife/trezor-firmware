@@ -16,14 +16,14 @@ if __debug__:
 _MAX_PASSPHRASE_LEN = const(50)
 
 
-async def protect_by_passphrase(ctx) -> str:
+async def protect_by_passphrase(ctx: wire.Context) -> str:
     if storage.has_passphrase():
         return await request_passphrase(ctx)
     else:
         return ""
 
 
-async def request_passphrase(ctx) -> str:
+async def request_passphrase(ctx: wire.Context) -> str:
     source = storage.get_passphrase_source()
     if source == PassphraseSourceType.ASK:
         source = await request_passphrase_source(ctx)
@@ -35,7 +35,7 @@ async def request_passphrase(ctx) -> str:
     return passphrase
 
 
-async def request_passphrase_source(ctx) -> int:
+async def request_passphrase_source(ctx: wire.Context) -> int:
     req = ButtonRequest(code=ButtonRequestType.PassphraseType)
     await ctx.call(req, MessageType.ButtonAck)
 
@@ -46,7 +46,7 @@ async def request_passphrase_source(ctx) -> int:
     return await ctx.wait(source)
 
 
-async def request_passphrase_ack(ctx, on_device: bool) -> str:
+async def request_passphrase_ack(ctx: wire.Context, on_device: bool) -> str:
     if not on_device:
         text = Text("Passphrase entry", ui.ICON_CONFIG)
         text.normal("Please, type passphrase", "on connected host.")

@@ -6,6 +6,9 @@ from trezor.crypto import random
 
 from apps.common import cache
 
+if False:
+    from typing import Optional
+
 HOMESCREEN_MAXSIZE = 16384
 
 _STORAGE_VERSION = b"\x02"
@@ -46,11 +49,11 @@ def _get_bool(app: int, key: int, public: bool = False) -> bool:
     return config.get(app, key, public) == _TRUE_BYTE
 
 
-def _set_uint8(app: int, key: int, val: int):
+def _set_uint8(app: int, key: int, val: int) -> None:
     config.set(app, key, val.to_bytes(1, "big"))
 
 
-def _get_uint8(app: int, key: int) -> int:
+def _get_uint8(app: int, key: int) -> Optional[int]:
     val = config.get(app, key)
     if not val:
         return None
@@ -80,21 +83,21 @@ def is_initialized() -> bool:
     return bool(config.get(_APP, _VERSION))
 
 
-def get_label() -> str:
+def get_label() -> Optional[str]:
     label = config.get(_APP, _LABEL, True)  # public
     if label is None:
         return None
     return label.decode()
 
 
-def get_mnemonic_secret() -> bytes:
+def get_mnemonic_secret() -> Optional[bytes]:
     mnemonic = config.get(_APP, _MNEMONIC_SECRET)
     if mnemonic is None:
         return None
     return mnemonic
 
 
-def get_mnemonic_type() -> int:
+def get_mnemonic_type() -> Optional[int]:
     return _get_uint8(_APP, _MNEMONIC_TYPE)
 
 
@@ -102,7 +105,7 @@ def has_passphrase() -> bool:
     return _get_bool(_APP, _USE_PASSPHRASE)
 
 
-def get_homescreen() -> bytes:
+def get_homescreen() -> Optional[bytes]:
     return config.get(_APP, _HOMESCREEN, True)  # public
 
 
@@ -219,12 +222,12 @@ def set_u2f_counter(cntr: int) -> None:
     config.set_counter(_APP, _U2F_COUNTER, cntr, True)  # writable when locked
 
 
-def wipe():
+def wipe() -> None:
     config.wipe()
     cache.clear()
 
 
-def init_unlocked():
+def init_unlocked() -> None:
     # Check for storage version upgrade.
     version = config.get(_APP, _VERSION)
     if version == b"\x01":

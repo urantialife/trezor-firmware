@@ -2,6 +2,9 @@ from micropython import const
 
 from trezor import ui
 
+if False:
+    from typing import List, Union
+
 TEXT_HEADER_HEIGHT = const(48)
 TEXT_LINE_HEIGHT = const(26)
 TEXT_LINE_HEIGHT_HALF = const(13)
@@ -13,7 +16,11 @@ BR = const(-256)
 BR_HALF = const(-257)
 
 
-def render_text(words: list, new_lines: bool, max_lines: int) -> None:
+if False:
+    TextContent = Union[str, int]
+
+
+def render_text(words: List[TextContent], new_lines: bool, max_lines: int) -> None:
     # initial rendering state
     font = ui.NORMAL
     fg = ui.FG
@@ -122,32 +129,32 @@ class Text(ui.Control):
         self.icon_color = icon_color
         self.max_lines = max_lines
         self.new_lines = new_lines
-        self.content = []
+        self.content = []  # type: List[Union[str, int]]
         self.repaint = True
 
-    def normal(self, *content):
+    def normal(self, *content: TextContent) -> None:
         self.content.append(ui.NORMAL)
         self.content.extend(content)
 
-    def bold(self, *content):
+    def bold(self, *content: TextContent) -> None:
         self.content.append(ui.BOLD)
         self.content.extend(content)
 
-    def mono(self, *content):
+    def mono(self, *content: TextContent) -> None:
         self.content.append(ui.MONO)
         self.content.extend(content)
 
-    def mono_bold(self, *content):
+    def mono_bold(self, *content: TextContent) -> None:
         self.content.append(ui.MONO_BOLD)
         self.content.extend(content)
 
-    def br(self):
+    def br(self) -> None:
         self.content.append(BR)
 
-    def br_half(self):
+    def br_half(self) -> None:
         self.content.append(BR_HALF)
 
-    def on_render(self):
+    def on_render(self) -> None:
         if self.repaint:
             ui.header(
                 self.header_text,
