@@ -4,20 +4,24 @@ from trezor.messages.OntologySignedOntIdRegister import OntologySignedOntIdRegis
 from trezor.messages.OntologySignOntIdRegister import OntologySignOntIdRegister
 from trezor.messages.OntologyTransaction import OntologyTransaction
 
+from .helpers import CURVE, validate_full_path
 from .layout import require_confirm_ont_id_register
 from .serialize import serialize_ont_id_register
 from .sign import sign
 
+from apps.common import paths
 
-async def sign_ont_id_register(ctx, msg: OntologySignOntIdRegister):
+
+async def sign_ont_id_register(ctx, msg: OntologySignOntIdRegister, keychain):
+    await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n, CURVE)
     await _require_confirm(ctx, msg.transaction, msg.ont_id_register)
 
-    address_n = msg.address_n or ()
+    node = keychain.derive(msg.address_n, CURVE)
     [raw_data, payload] = serialize_ont_id_register(
         msg.transaction, msg.ont_id_register
     )
 
-    signature = await sign(ctx, address_n, raw_data)
+    signature = await sign(raw_data, node.private_key())
 
     return OntologySignedOntIdRegister(signature=signature, payload=payload)
 

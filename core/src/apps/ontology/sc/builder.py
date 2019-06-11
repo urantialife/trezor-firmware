@@ -1,5 +1,3 @@
-from ubinascii import unhexlify
-
 from .. import writer
 from . import opcode
 

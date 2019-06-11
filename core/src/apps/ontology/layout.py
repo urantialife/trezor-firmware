@@ -1,11 +1,8 @@
-from micropython import const
 from ubinascii import hexlify
 
 from trezor import ui
-from trezor.messages import ButtonRequestType, MessageType
-from trezor.messages.ButtonRequest import ButtonRequest
-from trezor.ui.confirm import CONFIRMED, ConfirmDialog
-from trezor.ui.scroll import Scrollpage, animate_swipe, paginate
+from trezor.messages import ButtonRequestType
+from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
 from trezor.utils import chunks, format_amount
 
@@ -33,33 +30,35 @@ async def require_confirm_withdraw_ong(ctx, value):
 
 
 async def require_confirm_ont_id_register(ctx, ont_id, public_key):
-    title = "Confirm registering "
-    key = hexlify(public_key).decode() + " "
-    content = split_str(ont_id) + ["", "with public key "] + split_str(key)
+    t = Text("Confirm registering", ui.ICON_SEND, ui.GREEN)
+    key = hexlify(public_key).decode()
+    t.normal("for " + ont_id + " with public key " + key)
+    pages = [t]
 
-    return await show_swipable_with_confirmation(ctx, content, title)
+    return await require_confirm(ctx, Paginated(pages), code=ButtonRequestType.SignTx)
 
 
 async def require_confirm_ont_id_add_attributes(ctx, ont_id, public_key, attributes):
-    title = "Confirm attributes "
-    key = hexlify(public_key).decode() + ": "
-    content = split_str("for " + ont_id) + ["", "with public key "] + split_str(key)
-
+    key = hexlify(public_key).decode()
+    t = Text("Confirm attributes", ui.ICON_SEND, ui.GREEN)
+    t.normal("for " + ont_id + " with public key " + key)
+    pages = [t]
     for attribute in attributes:
-        content += split_str("Name: " + attribute.key)
-        content += split_str("Type: " + attribute.type)
-        content += split_str("Value: " + attribute.value)
-        content.append("")
+        t1 = Text("Attribute:")
+        t1.normal("Name " + attribute.key)
+        t1.normal("Type: " + attribute.type)
+        t1.normal("Value: " + attribute.value)
+        pages.append(t1)
 
-    return await show_swipable_with_confirmation(ctx, content, title)
+    return await require_confirm(ctx, Paginated(pages), ButtonRequestType.SignTx)
 
 
 def format_amount_ont(value):
-    return "%s %s" % (format_amount(amount, 0), "ONT")
+    return "%s %s" % (format_amount(value, 0), "ONT")
 
 
 def format_amount_ong(value):
-    return "%s %s" % (format_amount(amount, 9), "ONG")
+    return "%s %s" % (format_amount(value, 9), "ONG")
 
 
 def split_address(address):
@@ -68,37 +67,3 @@ def split_address(address):
 
 def split_str(text: str):
     return list(chunks(text, 16))
-
-
-async def show_swipable_with_confirmation(ctx, content, title: str):
-    first_page = const(0)
-    lines_per_page = const(5)
-
-    if isinstance(content, (list, tuple)):
-        lines = content
-    else:
-        lines = list(chunks(content, 17))
-    pages = list(chunks(lines, lines_per_page))
-
-    await ctx.call(ButtonRequest(code=ButtonRequestType.SignTx), MessageType.ButtonAck)
-
-    paginator = paginate(show_text_page, len(pages), first_page, pages, title)
-    return await ctx.wait(paginator) == CONFIRMED
-
-
-@ui.layout
-async def show_text_page(page: int, page_count: int, pages: list, title: str):
-    if page_count == 1:
-        page = 0
-
-    lines = pages[page]
-    content = Text(title, ui.ICON_DEFAULT, icon_color=ui.GREEN)
-    content.mono(*lines)
-
-    content = Scrollpage(content, page, page_count)
-
-    if page + 1 >= page_count:
-        return await ConfirmDialog(content)
-
-    content.render()
-    await animate_swipe()

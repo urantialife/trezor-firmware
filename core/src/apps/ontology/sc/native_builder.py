@@ -15,7 +15,7 @@ class ParamStruct:
         self.arr = arr
 
 
-def build_native_call(func_name: str, params: list, contract: str) -> bytes:
+def build_native_call(func_name: str, params: list, contract: bytes) -> bytes:
     """
     Builds native contract call
     """
@@ -23,7 +23,7 @@ def build_native_call(func_name: str, params: list, contract: str) -> bytes:
 
     _write_native_code_script(ret, params)
     builder.write_push_bytes(ret, func_name.encode())
-    builder.write_push_bytes(ret, unhexlify(contract))
+    builder.write_push_bytes(ret, contract)
     builder.write_push_int(ret, 0)
     writer.write_byte(ret, opcode.SYSCALL)
     builder.write_push_bytes(ret, b"Ontology.Native.Invoke")

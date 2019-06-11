@@ -1886,13 +1886,13 @@ def ontology_get_public_key(connect, address, show_display):
     help="Transfer in JSON format",
 )
 @click.pass_obj
-def ontology_sign_transfer(connect, address, transaction_f, transfer_f):
+def ontology_sign_transfer(connect, address, transaction, transfer):
     client = connect()
     address_n = tools.parse_path(address)
     transaction = protobuf.dict_to_proto(
-        proto.OntologyTransaction, json.load(transaction_f)
+        proto.OntologyTransaction, json.load(transaction)
     )
-    transfer = protobuf.dict_to_proto(proto.OntologyTransfer, json.load(transfer_f))
+    transfer = protobuf.dict_to_proto(proto.OntologyTransfer, json.load(transfer))
 
     result = ontology.sign_transfer(client, address_n, transaction, transfer)
 
@@ -1923,14 +1923,14 @@ def ontology_sign_transfer(connect, address, transaction_f, transfer_f):
     help="Withdrawal in JSON format",
 )
 @click.pass_obj
-def ontology_sign_withdraw_ong(connect, address, transaction_f, withdraw_ong_f):
+def ontology_sign_withdraw_ong(connect, address, transaction, withdraw_ong):
     client = connect()
     address_n = tools.parse_path(address)
     transaction = protobuf.dict_to_proto(
-        proto.OntologyTransaction, json.load(transaction_f)
+        proto.OntologyTransaction, json.load(transaction)
     )
     withdraw_ong = protobuf.dict_to_proto(
-        proto.OntologyWithdrawOng, json.load(withdraw_ong_f)
+        proto.OntologyWithdrawOng, json.load(withdraw_ong)
     )
 
     result = ontology.sign_withdrawal(client, address_n, transaction, withdraw_ong)
@@ -1964,14 +1964,14 @@ def ontology_sign_withdraw_ong(connect, address, transaction_f, withdraw_ong_f):
 @click.argument("transaction")
 @click.argument("ont_id_register")
 @click.pass_obj
-def ontology_sign_ont_id_register(connect, address, transaction_f, ont_id_register_f):
+def ontology_sign_ont_id_register(connect, address, transaction, register):
     client = connect()
     address_n = tools.parse_path(address)
     transaction = protobuf.dict_to_proto(
-        proto.OntologyTransaction, json.load(transaction_f)
+        proto.OntologyTransaction, json.load(transaction)
     )
     ont_id_register = protobuf.dict_to_proto(
-        proto.OntologyOntIdRegister, json.load(ont_id_register_f)
+        proto.OntologyOntIdRegister, json.load(register)
     )
 
     result = ontology.sign_register(client, address_n, transaction, ont_id_register)
@@ -2003,16 +2003,14 @@ def ontology_sign_ont_id_register(connect, address, transaction_f, ont_id_regist
     help="Add attributes in JSON format",
 )
 @click.pass_obj
-def ontology_sign_ont_id_add_attributes(
-    connect, address, transaction_f, ont_id_add_attributes_f
-):
+def ontology_sign_ont_id_add_attributes(connect, address, transaction, add_attr):
     client = connect()
     address_n = tools.parse_path(address)
     transaction = protobuf.dict_to_proto(
-        proto.OntologyTransaction, json.load(transaction_f)
+        proto.OntologyTransaction, json.load(transaction)
     )
     ont_id_add_attributes = protobuf.dict_to_proto(
-        proto.OntologyOntIdAddAttributes, json.load(ont_id_add_attributes_f)
+        proto.OntologyOntIdAddAttributes, json.load(add_attr)
     )
 
     result = ontology.sign_add_attr(

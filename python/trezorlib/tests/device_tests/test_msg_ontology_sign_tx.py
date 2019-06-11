@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import messages, ontology
+from trezorlib import debuglink, messages, ontology
 from trezorlib.tools import parse_path
 
 from .common import TrezorTest
@@ -57,9 +57,17 @@ class TestMsgOntologySigntx(TrezorTest):
             == "0102f9b0c43b2ed35aa89b0927a60e692cb8a74280c2da819a909150c8b3fd2b0b401806c97797fcc4b93d34f210ad01740cfd13b720a389a80f384c1f94fb749e"
         )
 
+    # original test didn't work, had to replace with data from
+    # https://github.com/ontio/ontology-ts-sdk/blob/master/test/transfer.sign.test.ts
     def test_ontology_sign_transfer_ong(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-
+        debuglink.load_device_by_mnemonic(
+            self.client,
+            mnemonic="immune annual decorate major humble surprise dismiss trend edit suit alert uncover release transfer suit torch small timber lock mind tomorrow north lend diet",
+            pin="",
+            passphrase_protection=False,
+            label="test",
+            language="english",
+        )
         transaction = messages.OntologyTransaction(
             version=0x00,
             nonce=0x7F7F1CEB,
@@ -78,9 +86,9 @@ class TestMsgOntologySigntx(TrezorTest):
         )
 
         signature = ontology.sign_transfer(
-            self.client, parse_path("m/44'/1024'/0'/0/0"), transaction, transfer
+            self.client, parse_path("m/44'/888'/0'/0/0"), transaction, transfer
         )
         assert (
             signature.signature.hex()
-            == "01ad88061a6cf5f4960cf9d311adb6dec4925d368b0fa9b7f56269f2a4078bea2367469af50c70260142d2ce3cc2d1e7fd0b2923df659c994412ff18f138438e9d"
+            == "017da1b8268e1272d7471eef58fa0884108073c09d5efdae0143da5d281019682e5a1562f1d76484eb0379e3febe7025a958bb14855107b9ad26daec2fee0119f4"
         )

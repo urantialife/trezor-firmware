@@ -19,7 +19,6 @@ import time
 import pytest
 
 from trezorlib import messages, ontology
-from trezorlib.messages import ButtonRequestType as B
 from trezorlib.tools import parse_path
 
 from .common import TrezorTest
@@ -30,7 +29,7 @@ from .common import TrezorTest
 class TestMsgOntologySignOntIdRegister(TrezorTest):
     def test_ontology_sign_ont_id_register(self):
         self.setup_mnemonic_nopin_nopassphrase()
-
+        self.client.set_input_flow(self.input_flow(num_pages=2))
         transaction = messages.OntologyTransaction(
             version=0x00,
             nonce=0x7F7F1CEB,
@@ -48,9 +47,8 @@ class TestMsgOntologySignOntIdRegister(TrezorTest):
             ),
         )
 
-        # not using ontology.sign_register() because of swiping
-        signature = self._ontology_sign(
-            1, parse_path("m/44'/1024'/0'/0/0"), transaction, ont_id_register
+        signature = ontology.sign_add_attr(
+            self.client, parse_path("m/44'/1024'/0'/0/0"), transaction, ont_id_register
         )
         assert (
             signature.payload.hex()
@@ -61,29 +59,10 @@ class TestMsgOntologySignOntIdRegister(TrezorTest):
             == "015d6abe231352d1ab32f0b0de0222cfb9a7a13f467a2bf8a369b61aa1f933dc3a6a2ba7831c8a15984fe0958d24cbca05d8e0736510c1734d773145ce3eac9e9b"
         )
 
-    def _ontology_sign(self, num_of_swipes, address_n, transaction, ont_id_register):
-        def input_flow():
-            # Sign Tx
-            btn_code = yield
-            assert btn_code == B.SignTx
-
-            # Swipe and confirm
+    def input_flow(self, num_pages):
+        yield
+        time.sleep(1)
+        for _ in range(num_pages - 1):
+            self.client.debug.swipe_down()
             time.sleep(1)
-            for _ in range(num_of_swipes):
-                self.client.debug.swipe_down()
-                time.sleep(1)
-
-            # Confirm Action
-            self.client.debug.press_yes()
-
-        with self.client:
-            self.client.set_expected_responses(
-                [
-                    messages.ButtonRequest(code=B.SignTx),
-                    messages.OntologySignedOntIdRegister(),
-                ]
-            )
-            self.client.set_input_flow(input_flow)
-            return ontology.sign_register(
-                self.client, address_n, transaction, ont_id_register
-            )
+        self.client.debug.press_yes()

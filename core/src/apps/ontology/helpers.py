@@ -1,7 +1,10 @@
 from trezor.crypto import base58
 from trezor.crypto.scripts import sha256_ripemd160_digest
 
+from apps.common import HARDENED
+
 CURVE = "nist256p1"
+
 
 def get_address_from_public_key(pubkey: bytes) -> str:
     """
@@ -30,7 +33,7 @@ def validate_full_path(path: list) -> bool:
         return False
     if path[0] != 44 | HARDENED:
         return False
-    if path[1] != 1024 | HARDENED:
+    if path[1] != 1024 | HARDENED and path[1] != 888 | HARDENED:
         return False
     if path[2] < HARDENED or path[2] > 20 | HARDENED:
         return False

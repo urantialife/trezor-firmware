@@ -19,7 +19,6 @@ import time
 import pytest
 
 from trezorlib import messages, ontology
-from trezorlib.messages import ButtonRequestType as B
 from trezorlib.tools import parse_path
 
 from .common import TrezorTest
@@ -30,7 +29,7 @@ from .common import TrezorTest
 class TestMsgOntologySignOntIdAddAttributes(TrezorTest):
     def test_ontology_sign_ont_id_add_attributes(self):
         self.setup_mnemonic_nopin_nopassphrase()
-
+        self.client.set_input_flow(self.input_flow(num_pages=2))
         transaction = messages.OntologyTransaction(
             version=0x00,
             nonce=0x7F7F1CEB,
@@ -53,9 +52,11 @@ class TestMsgOntologySignOntIdAddAttributes(TrezorTest):
             ],
         )
 
-        # not using ontology.sign_add_attr() because of swiping
-        signature = self._ontology_sign(
-            2, parse_path("m/44'/1024'/0'/0/0"), transaction, ont_id_add_attributes
+        signature = ontology.sign_add_attr(
+            self.client,
+            parse_path("m/44'/1024'/0'/0/0"),
+            transaction,
+            ont_id_add_attributes,
         )
 
         assert (
@@ -67,31 +68,10 @@ class TestMsgOntologySignOntIdAddAttributes(TrezorTest):
             == "01c256dc16d88685fd6652d69b808059f7ed30edadb0ccfe51802702b94b65500922f9ea80e0fd7b77b5c51515e3bc43a495b3e98fb3adb82a0ab5dd47169fcf4e"
         )
 
-    def _ontology_sign(
-        self, num_of_swipes, address_n, transaction, ont_id_add_attributes
-    ):
-        def input_flow():
-            # Sign Tx
-            btn_code = yield
-            assert btn_code == B.SignTx
-
-            # Swipe and confirm
+    def input_flow(self, num_pages):
+        yield
+        time.sleep(1)
+        for _ in range(num_pages - 1):
+            self.client.debug.swipe_down()
             time.sleep(1)
-            for _ in range(num_of_swipes):
-                self.client.debug.swipe_down()
-                time.sleep(1)
-
-            # Confirm Action
-            self.client.debug.press_yes()
-
-        with self.client:
-            self.client.set_input_flow(input_flow)
-            self.client.set_expected_responses(
-                [
-                    messages.ButtonRequest(code=B.SignTx),
-                    messages.OntologySignedOntIdAddAttributes(),
-                ]
-            )
-            return ontology.sign_add_attr(
-                self.client, address_n, transaction, ont_id_add_attributes
-            )
+        self.client.debug.press_yes()

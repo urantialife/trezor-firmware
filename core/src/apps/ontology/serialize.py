@@ -1,6 +1,5 @@
 from trezor.messages import OntologyAsset
 from trezor.messages.OntologyOntIdAddAttributes import OntologyOntIdAddAttributes
-from trezor.messages.OntologyOntIdAttribute import OntologyOntIdAttribute
 from trezor.messages.OntologyOntIdRegister import OntologyOntIdRegister
 from trezor.messages.OntologyTransaction import OntologyTransaction
 from trezor.messages.OntologyTransfer import OntologyTransfer
@@ -95,7 +94,8 @@ def _serialize_transfer_payload(transfer: OntologyTransfer):
     native_call = build_native_call("transfer", [[struct]], contract)
 
     # 9 is the maximum possible length of the uvarint prefix
-    ret = bytearray(len(native_call) + 9)
+    # ret = bytearray(len(native_call) + 9)
+    ret = bytearray()
     writer.write_bytes_with_length(ret, native_call)
     return bytes(ret)
 
