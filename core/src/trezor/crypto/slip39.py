@@ -21,8 +21,23 @@
 from micropython import const
 
 from trezor.crypto import hashlib, hmac, pbkdf2, random
-from trezor.crypto.slip39_wordlist import wordlist
-from trezorcrypto import shamir
+from trezorcrypto import shamir, slip39
+
+_KEYBOARD_FULL_MASK = const(0x1FF)
+"""All buttons are allowed. 9-bit bitmap all set to 1."""
+
+
+def compute_mask(prefix: str) -> int:
+    if not prefix:
+        return _KEYBOARD_FULL_MASK
+    return slip39.compute_mask(int(prefix))
+
+
+def button_sequence_to_word(prefix: str) -> str:
+    if not prefix:
+        return _KEYBOARD_FULL_MASK
+    return slip39.button_sequence_to_word(int(prefix))
+
 
 _RADIX_BITS = const(10)
 """The length of the radix in bits."""
@@ -86,21 +101,6 @@ class MnemonicError(Exception):
     pass
 
 
-def word_index(word):
-    word = word + " " * (8 - len(word))
-    lo = 0
-    hi = _RADIX
-    while hi - lo > 1:
-        mid = (hi + lo) // 2
-        if wordlist[mid * 8 : mid * 8 + 8] > word:
-            hi = mid
-        else:
-            lo = mid
-    if wordlist[lo * 8 : lo * 8 + 8] != word:
-        raise MnemonicError('Invalid mnemonic word "{}".'.format(word))
-    return lo
-
-
 def _rs1024_polymod(values):
     GEN = (
         0xE0E040,
@@ -154,11 +154,11 @@ def _int_to_indices(value, length, bits):
 
 
 def mnemonic_from_indices(indices):
-    return " ".join(wordlist[i * 8 : i * 8 + 8].strip() for i in indices)
+    return " ".join(slip39.get_word(i) for i in indices)
 
 
 def mnemonic_to_indices(mnemonic):
-    return (word_index(word.lower()) for word in mnemonic.split())
+    return (slip39.word_index(word.lower()) for word in mnemonic.split())
 
 
 def _round_function(i, passphrase, e, salt, r):
