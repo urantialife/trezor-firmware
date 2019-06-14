@@ -14,7 +14,12 @@ from apps.common import paths
 
 async def sign_ont_id_register(ctx, msg: OntologySignOntIdRegister, keychain):
     await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n, CURVE)
-    await _require_confirm(ctx, msg.transaction, msg.ont_id_register)
+    if msg.transaction.type == 0xD1:
+        await require_confirm_ont_id_register(
+            ctx, msg.ont_id_register.ont_id, msg.ont_id_register.public_key
+        )
+    else:
+        raise wire.DataError("Invalid transaction type")
 
     node = keychain.derive(msg.address_n, CURVE)
     [raw_data, payload] = serialize_ont_id_register(
@@ -24,14 +29,3 @@ async def sign_ont_id_register(ctx, msg: OntologySignOntIdRegister, keychain):
     signature = await sign(raw_data, node.private_key())
 
     return OntologySignedOntIdRegister(signature=signature, payload=payload)
-
-
-async def _require_confirm(
-    ctx, transaction: OntologyTransaction, register: OntologyOntIdRegister
-):
-    if transaction.type == 0xD1:
-        return await require_confirm_ont_id_register(
-            ctx, register.ont_id, register.public_key
-        )
-
-    raise wire.DataError("Invalid transaction type")

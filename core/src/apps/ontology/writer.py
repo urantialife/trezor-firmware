@@ -1,3 +1,5 @@
+from apps.wallet.sign_tx.writers import write_varint
+
 def write_byte(w: bytearray, n: int):
     """
     Writes one byte (8bit)
@@ -45,25 +47,6 @@ def write_bool(w: bytearray, n: bool):
         write_byte(w, 1)
     else:
         write_byte(w, 0)
-
-
-def write_varint(w: bytearray, n: int):
-    """
-    Writes variable length integer
-    """
-    assert 0 <= n <= 0xFFFFFFFF
-
-    if n < 0xFD:
-        w.append(n & 0xFF)
-    elif n <= 0xFFFF:
-        w.append(0xFD)
-        write_uint16(w, n)
-    elif n <= 0xFFFFFFFF:
-        w.append(0xFE)
-        write_uint32(w, n)
-    else:
-        w.append(0xFF)
-        write_uint64(w, n)
 
 
 def write_bytes(w: bytearray, buf: bytes):

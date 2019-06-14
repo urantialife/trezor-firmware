@@ -15,26 +15,20 @@ from apps.common import paths
 
 async def sign_transfer(ctx, msg: OntologySignTransfer, keychain):
     await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n, CURVE)
-    await _require_confirm(ctx, msg.transaction, msg.transfer)
+    if msg.transaction.type == 0xD1:
+        if msg.transfer.asset == OntologyAsset.ONT:
+            await require_confirm_transfer_ont(
+                ctx, msg.transfer.to_address, msg.transfer.amount
+            )
+        if msg.transfer.asset == OntologyAsset.ONG:
+            await require_confirm_transfer_ong(
+                ctx, msg.transfer.to_address, msg.transfer.amount
+            )
+    else:
+        raise wire.DataError("Invalid transaction type")
 
     node = keychain.derive(msg.address_n, CURVE)
     [raw_data, payload] = serialize_transfer(msg.transaction, msg.transfer)
     signature = await sign(raw_data, node.private_key())
 
     return OntologySignedTransfer(signature=signature, payload=payload)
-
-
-async def _require_confirm(
-    ctx, transaction: OntologyTransaction, transfer: OntologyTransfer
-):
-    if transaction.type == 0xD1:
-        if transfer.asset == OntologyAsset.ONT:
-            return await require_confirm_transfer_ont(
-                ctx, transfer.to_address, transfer.amount
-            )
-        if transfer.asset == OntologyAsset.ONG:
-            return await require_confirm_transfer_ong(
-                ctx, transfer.to_address, transfer.amount
-            )
-
-    raise wire.DataError("Invalid transaction type")

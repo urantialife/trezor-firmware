@@ -21,7 +21,15 @@ async def sign_ont_id_add_attributes(
     ctx, msg: OntologySignOntIdAddAttributes, keychain
 ):
     await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n, CURVE)
-    await _require_confirm(ctx, msg.transaction, msg.ont_id_add_attributes)
+    if msg.transaction.type == 0xD1:
+        await require_confirm_ont_id_add_attributes(
+            ctx,
+            msg.ont_id_add_attributes.ont_id,
+            msg.ont_id_add_attributes.public_key,
+            msg.ont_id_add_attributes.ont_id_attributes
+        )
+    else:
+        raise wire.DataError("Invalid transaction type")
 
     node = keychain.derive(msg.address_n, CURVE)
     [raw_data, payload] = serialize_ont_id_add_attributes(
@@ -30,14 +38,3 @@ async def sign_ont_id_add_attributes(
     signature = await sign(raw_data, node.private_key())
 
     return OntologySignedOntIdAddAttributes(signature=signature, payload=payload)
-
-
-async def _require_confirm(
-    ctx, transaction: OntologyTransaction, add: OntologyOntIdAddAttributes
-):
-    if transaction.type == 0xD1:
-        return await require_confirm_ont_id_add_attributes(
-            ctx, add.ont_id, add.public_key, add.ont_id_attributes
-        )
-
-    raise wire.DataError("Invalid transaction type")
