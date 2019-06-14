@@ -1,10 +1,10 @@
 # Binance
 
-MAINTAINER = Stanislav Marcinko stanislav.marcinko@satoshilabs.com
+MAINTAINER = Stanislav Marcinko <stanislav.marcinko@satoshilabs.com>
 
-AUTHOR = Stanislav Marcinko stanislav.marcinko@satoshilabs.com
+AUTHOR = Stanislav Marcinko <stanislav.marcinko@satoshilabs.com>
 
-REVIEWER = TBD
+REVIEWER = Jan Matějek <jan.matejek@satoshilabs.com>
 
 -----
 

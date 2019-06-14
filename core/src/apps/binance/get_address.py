@@ -7,10 +7,7 @@ from apps.common.layout import address_n_to_str, show_address, show_qr
 
 
 async def get_address(ctx, msg: BinanceGetAddress, keychain):
-    if __debug__:  # TODO: find a better way to handle testnet vs mainnet
-        HRP = "tbnb"
-    else:
-        HRP = "bnb"
+    HRP = "bnb"
 
     await paths.validate_path(
         ctx, helpers.validate_full_path, keychain, msg.address_n, CURVE

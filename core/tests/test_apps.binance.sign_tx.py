@@ -1,8 +1,10 @@
 from common import *
 
 from apps.binance.helpers import produce_json_for_signing
-from apps.binance.sign_tx import generate_content_signature, verify_content_signature, sign_tx
+from apps.binance.sign_tx import generate_content_signature, sign_tx
 
+from trezor.crypto.curve import secp256k1
+from trezor.crypto.hashlib import sha256
 from trezor.messages.BinanceCancelMsg import BinanceCancelMsg
 from trezor.messages.BinanceCoin import BinanceCoin
 from trezor.messages.BinanceInputOutput import BinanceInputOutput
@@ -95,6 +97,12 @@ class TestBinanceSign(unittest.TestCase):
 
         #check if the signed data is the same as test vector
         self.assertEqual(signature, unhexlify(expected_signature))
+
+def verify_content_signature(
+    public_key: bytes, signature: bytes, unsigned_data: bytes
+) -> bool:
+    msghash = sha256(unsigned_data).digest()
+    return secp256k1.verify(public_key, signature, msghash)
 
 if __name__ == '__main__':
     unittest.main()

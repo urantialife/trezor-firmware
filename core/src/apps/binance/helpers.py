@@ -1,9 +1,9 @@
 from micropython import const
 
 from trezor.crypto import bech32
-from trezor.crypto.hashlib import ripemd160, sha256
-from trezor.messages import MessageType
+from trezor.crypto.scripts import sha256_ripemd160_digest
 from trezor.messages.BinanceCancelMsg import BinanceCancelMsg
+from trezor.messages.BinanceInputOutput import BinanceInputOutput
 from trezor.messages.BinanceOrderMsg import BinanceOrderMsg
 from trezor.messages.BinanceSignTx import BinanceSignTx
 from trezor.messages.BinanceTransferMsg import BinanceTransferMsg
@@ -17,25 +17,24 @@ MSG_CANCEL_BLUEPRINT = '{{"refid":"{refid}","sender":"{sender}","symbol":"{symbo
 INPUT_OUTPUT_BLUEPRINT = '{{"address":"{address}","coins":[{coins}]}}'
 COIN_BLUEPRINT = '{{"amount":"{amount}","denom":"{denom}"}}'
 
-DIVISIBILITY = const(
-    18
-)  # 1*10^18 Jagers equal 1 BNB https://www.binance.vision/glossary/jager
+# 1*10^18 Jagers equal 1 BNB https://www.binance.vision/glossary/jager
+DIVISIBILITY = const(18)
 
 
 def produce_json_for_signing(envelope: BinanceSignTx, msg) -> str:
-    if msg.MESSAGE_WIRE_TYPE == MessageType.BinanceTransferMsg:
+    if isinstance(msg, BinanceTransferMsg):
         json_msg = produce_transfer_json(msg)
-    elif msg.MESSAGE_WIRE_TYPE == MessageType.BinanceOrderMsg:
+    elif isinstance(msg, BinanceOrderMsg):
         json_msg = produce_neworder_json(msg)
-    elif msg.MESSAGE_WIRE_TYPE == MessageType.BinanceCancelMsg:
+    elif isinstance(msg, BinanceCancelMsg):
         json_msg = produce_cancel_json(msg)
     else:
         raise ValueError("input message unrecognized, is of type " + type(msg).__name__)
 
     if envelope.source is None or envelope.source <= 0:
-        source = 0
-    else:
-        source = envelope.source
+        raise ValueError("source missing or invalid")
+
+    source = envelope.source
 
     return ENVELOPE_BLUEPRINT.format(
         account_number=envelope.account_number,
@@ -48,33 +47,15 @@ def produce_json_for_signing(envelope: BinanceSignTx, msg) -> str:
 
 
 def produce_transfer_json(msg: BinanceTransferMsg) -> str:
-    inputs = ""
-    for count, txinput in enumerate(msg.inputs, 1):
-        coins = ""
-        for coincount, coin in enumerate(txinput.coins, 1):
-            coin_json = COIN_BLUEPRINT.format(amount=coin.amount, denom=coin.denom)
-            coins = coins + coin_json
-            if coincount < len(txinput.coins):
-                coins = coins + ","
-        input_json = INPUT_OUTPUT_BLUEPRINT.format(address=txinput.address, coins=coins)
-        inputs = inputs + input_json
-        if count < len(msg.inputs):
-            inputs = inputs + ","
-
-    outputs = ""
-    for count, txoutput in enumerate(msg.outputs, 1):
-        coins = ""
-        for coincount, coin in enumerate(txoutput.coins, 1):
-            coin_json = COIN_BLUEPRINT.format(amount=coin.amount, denom=coin.denom)
-            coins = coins + coin_json
-            if coincount < len(txoutput.coins):
-                coins = coins + ","
-        output_json = INPUT_OUTPUT_BLUEPRINT.format(
-            address=txoutput.address, coins=coins
+    def make_input_output(input_output: BinanceInputOutput):
+        coins = ",".join(
+            COIN_BLUEPRINT.format(amount=c.amount, denom=c.denom)
+            for c in input_output.coins
         )
-        outputs = outputs + output_json
-        if count < len(msg.outputs):
-            outputs = outputs + ","
+        return INPUT_OUTPUT_BLUEPRINT.format(address=input_output.address, coins=coins)
+
+    inputs = ",".join(make_input_output(i) for i in msg.inputs)
+    outputs = ",".join(make_input_output(o) for o in msg.outputs)
 
     return MSG_TRANSFER_BLUEPRINT.format(inputs=inputs, outputs=outputs)
 
@@ -105,8 +86,7 @@ def address_from_public_key(pubkey: bytes, hrp: str) -> str:
     HRP - bnb for productions, tbnb for tests
     """
 
-    h = sha256(pubkey).digest()
-    h = ripemd160(h).digest()
+    h = sha256_ripemd160_digest(pubkey)
 
     convertedbits = bech32.convertbits(h, 8, 5, False)
 
