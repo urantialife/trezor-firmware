@@ -26,6 +26,7 @@ from .common import TrezorTest
 
 @pytest.mark.ontology
 @pytest.mark.skip_t1
+@pytest.mark.skip(reason="bad testing data")
 class TestMsgOntologySignOntIdRegister(TrezorTest):
     def test_ontology_sign_ont_id_register(self):
         self.setup_mnemonic_nopin_nopassphrase()

@@ -11,65 +11,51 @@ from .helpers import get_bytes_from_address
 from .sc.native_builder import ParamStruct, build_native_call
 
 
-def serialize_tx(tx: OntologyTransaction, payload: bytes):
-    """
-    Serializes transaction with already serialized payload
-    """
-    ret = bytearray()
-
-    writer.write_byte(ret, tx.version)
-    writer.write_byte(ret, tx.type)
-    writer.write_uint32(ret, tx.nonce)
-    writer.write_uint64(ret, tx.gas_price)
-    writer.write_uint64(ret, tx.gas_limit)
-
+def serialize_tx(tx: OntologyTransaction, payload: bytes, hw):
+    writer.write_byte(hw, tx.version)
+    writer.write_byte(hw, tx.type)
+    writer.write_uint32(hw, tx.nonce)
+    writer.write_uint64(hw, tx.gas_price)
+    writer.write_uint64(hw, tx.gas_limit)
     payer = get_bytes_from_address(tx.payer)
-    writer.write_bytes(ret, payer)
+    writer.write_bytes(hw, payer)
 
-    writer.write_bytes(ret, payload)
+    writer.write_bytes(hw, payload)
 
     attributes = tx.tx_attributes
-    writer.write_varint(ret, len(attributes))
+    writer.write_varint(hw, len(attributes))
 
     if attributes is not None:
         for attribute in attributes:
-            _serialize_tx_attribute(ret, attribute)
-
-    return ret
+            _serialize_tx_attribute(hw, attribute)
 
 
-def serialize_transfer(tx: OntologyTransaction, transfer: OntologyTransfer):
+def serialize_transfer(transfer: OntologyTransfer):
     """
     Serializes transaction with specified transfer as payload
     """
-    payload = _serialize_transfer_payload(transfer)
-    return [serialize_tx(tx, payload), payload]
+    return _serialize_transfer_payload(transfer)
 
 
-def serialize_withdraw_ong(tx: OntologyTransaction, withdraw_ong: OntologyWithdrawOng):
+def serialize_withdraw_ong(withdraw_ong: OntologyWithdrawOng):
     """
     Serializes transaction with specified withdraw Ong as payload
     """
-    payload = _serialize_withdraw_ong_payload(withdraw_ong)
-    return [serialize_tx(tx, payload), payload]
+    return _serialize_withdraw_ong_payload(withdraw_ong)
 
 
-def serialize_ont_id_register(tx: OntologyTransaction, register: OntologyOntIdRegister):
+def serialize_ont_id_register(register: OntologyOntIdRegister):
     """
     Serializes transaction with specified ONT ID registration as payload
     """
-    payload = _serialize_ont_id_register_payload(register)
-    return [serialize_tx(tx, payload), payload]
+    return _serialize_ont_id_register_payload(register)
 
 
-def serialize_ont_id_add_attributes(
-    tx: OntologyTransaction, add: OntologyOntIdAddAttributes
-):
+def serialize_ont_id_add_attributes(add: OntologyOntIdAddAttributes):
     """
     Serializes transaction with specified ONT ID attributes adding as payload
     """
-    payload = _serialize_ont_id_add_attributes_payload(add)
-    return [serialize_tx(tx, payload), payload]
+    return _serialize_ont_id_add_attributes_payload(add)
 
 
 def _serialize_tx_attribute(ret: bytearray, attribute: OntologyTxAttribute):

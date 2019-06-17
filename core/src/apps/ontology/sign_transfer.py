@@ -1,13 +1,13 @@
 from trezor import wire
+from trezor.crypto.hashlib import sha256
 from trezor.messages import OntologyAsset
 from trezor.messages.OntologySignedTransfer import OntologySignedTransfer
 from trezor.messages.OntologySignTransfer import OntologySignTransfer
-from trezor.messages.OntologyTransaction import OntologyTransaction
-from trezor.messages.OntologyTransfer import OntologyTransfer
+from trezor.utils import HashWriter
 
 from .helpers import CURVE, validate_full_path
 from .layout import require_confirm_transfer_ong, require_confirm_transfer_ont
-from .serialize import serialize_transfer
+from .serialize import serialize_transfer, serialize_tx
 from .sign import sign
 
 from apps.common import paths
@@ -28,7 +28,9 @@ async def sign_transfer(ctx, msg: OntologySignTransfer, keychain):
         raise wire.DataError("Invalid transaction type")
 
     node = keychain.derive(msg.address_n, CURVE)
-    [raw_data, payload] = serialize_transfer(msg.transaction, msg.transfer)
-    signature = await sign(raw_data, node.private_key())
+    hw = HashWriter(sha256())
+    serialized_payload = serialize_transfer(msg.transfer)
+    serialize_tx(msg.transaction, serialized_payload, hw)
+    signature = await sign(hw.get_digest(), node.private_key())
 
-    return OntologySignedTransfer(signature=signature, payload=payload)
+    return OntologySignedTransfer(signature=signature, payload=serialized_payload)

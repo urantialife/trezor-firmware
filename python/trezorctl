@@ -1992,6 +1992,7 @@ def ontology_sign_ont_id_register(connect, address, transaction, register):
     "-tx",
     "--transaction",
     type=click.File("r"),
+    required=True,
     default="-",
     help="Transaction in JSON format",
 )
@@ -1999,6 +2000,7 @@ def ontology_sign_ont_id_register(connect, address, transaction, register):
     "-aa",
     "--add_attr",
     type=click.File("r"),
+    required=True,
     default="-",
     help="Add attributes in JSON format",
 )
@@ -2012,11 +2014,9 @@ def ontology_sign_ont_id_add_attributes(connect, address, transaction, add_attr)
     ont_id_add_attributes = protobuf.dict_to_proto(
         proto.OntologyOntIdAddAttributes, json.load(add_attr)
     )
-
     result = ontology.sign_add_attr(
         client, address_n, transaction, ont_id_add_attributes
     )
-
     output = {"payload": result.payload.hex(), "signature": result.signature.hex()}
 
     return output

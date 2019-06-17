@@ -1,5 +1,6 @@
 from apps.wallet.sign_tx.writers import write_varint
 
+
 def write_byte(w: bytearray, n: int):
     """
     Writes one byte (8bit)

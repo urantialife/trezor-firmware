@@ -6,7 +6,7 @@ async def sign(raw_data: bytes, private_key: bytes) -> bytes:
     """
     Creates signature for data
     """
-    data_hash = sha256(sha256(sha256(raw_data).digest()).digest()).digest()
+    data_hash = sha256(sha256(raw_data).digest()).digest()
 
     signature = nist256p1.sign(private_key, data_hash, False)
     signature = b"\x01" + signature[1:65]  # first byte of transaction is 0x01

@@ -10,10 +10,8 @@ from apps.common.layout import show_address, show_qr
 
 async def get_address(ctx, msg: OntologyGetAddress, keychain):
     await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n, CURVE)
-    print("path check 1")
 
     node = keychain.derive(msg.address_n, CURVE)
-    print("path check 2")
     seckey = node.private_key()
     public_key = nist256p1.publickey(seckey, True)
     address = get_address_from_public_key(public_key)

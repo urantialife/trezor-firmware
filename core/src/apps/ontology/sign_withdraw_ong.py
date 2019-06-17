@@ -1,12 +1,12 @@
 from trezor import wire
+from trezor.crypto.hashlib import sha256
 from trezor.messages.OntologySignedWithdrawOng import OntologySignedWithdrawOng
 from trezor.messages.OntologySignWithdrawOng import OntologySignWithdrawOng
-from trezor.messages.OntologyTransaction import OntologyTransaction
-from trezor.messages.OntologyWithdrawOng import OntologyWithdrawOng
+from trezor.utils import HashWriter
 
 from .helpers import CURVE, validate_full_path
 from .layout import require_confirm_withdraw_ong
-from .serialize import serialize_withdraw_ong
+from .serialize import serialize_tx, serialize_withdraw_ong
 from .sign import sign
 
 from apps.common import paths
@@ -20,7 +20,9 @@ async def sign_withdraw_ong(ctx, msg: OntologySignWithdrawOng, keychain):
         raise wire.DataError("Invalid transaction type")
 
     node = keychain.derive(msg.address_n, CURVE)
-    [raw_data, payload] = serialize_withdraw_ong(msg.transaction, msg.withdraw_ong)
-    signature = await sign(raw_data, node.private_key())
+    hw = HashWriter(sha256())
+    serialized_payload = serialize_withdraw_ong(msg.withdraw_ong)
+    serialize_tx(msg.transaction, serialized_payload, hw)
+    signature = await sign(hw.get_digest(), node.private_key())
 
-    return OntologySignedWithdrawOng(signature=signature, payload=payload)
+    return OntologySignedWithdrawOng(signature=signature, payload=serialized_payload)

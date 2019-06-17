@@ -1,12 +1,12 @@
 from trezor import wire
-from trezor.messages.OntologyOntIdRegister import OntologyOntIdRegister
+from trezor.crypto.hashlib import sha256
 from trezor.messages.OntologySignedOntIdRegister import OntologySignedOntIdRegister
 from trezor.messages.OntologySignOntIdRegister import OntologySignOntIdRegister
-from trezor.messages.OntologyTransaction import OntologyTransaction
+from trezor.utils import HashWriter
 
 from .helpers import CURVE, validate_full_path
 from .layout import require_confirm_ont_id_register
-from .serialize import serialize_ont_id_register
+from .serialize import serialize_ont_id_register, serialize_tx
 from .sign import sign
 
 from apps.common import paths
@@ -22,10 +22,9 @@ async def sign_ont_id_register(ctx, msg: OntologySignOntIdRegister, keychain):
         raise wire.DataError("Invalid transaction type")
 
     node = keychain.derive(msg.address_n, CURVE)
-    [raw_data, payload] = serialize_ont_id_register(
-        msg.transaction, msg.ont_id_register
-    )
+    hw = HashWriter(sha256())
+    serialized_payload = serialize_ont_id_register(msg.ont_id_register)
+    serialize_tx(msg.transaction, serialized_payload, hw)
+    signature = await sign(hw.get_digest(), node.private_key())
 
-    signature = await sign(raw_data, node.private_key())
-
-    return OntologySignedOntIdRegister(signature=signature, payload=payload)
+    return OntologySignedOntIdRegister(signature=signature, payload=serialized_payload)
