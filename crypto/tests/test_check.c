@@ -67,6 +67,7 @@
 #include "sha2.h"
 #include "sha3.h"
 #include "shamir.h"
+#include "slip39.h"
 
 #if VALGRIND
 /*
@@ -5096,6 +5097,14 @@ START_TEST(test_mnemonic_to_entropy) {
 }
 END_TEST
 
+
+START_TEST(test_slip39_get_word) {
+  const char * a;
+  a = get_word(0);
+  ck_assert_str_eq(a, "academic");
+}
+END_TEST
+
 START_TEST(test_shamir) {
 #define SHAMIR_MAX_COUNT 16
   static const struct {
@@ -8674,6 +8683,10 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_mnemonic);
   tcase_add_test(tc, test_mnemonic_check);
   tcase_add_test(tc, test_mnemonic_to_entropy);
+  suite_add_tcase(s, tc);
+
+  tc = tcase_create("slip39");
+  tcase_add_test(tc, test_slip39_get_word);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("shamir");
