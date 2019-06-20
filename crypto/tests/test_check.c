@@ -5099,9 +5099,158 @@ END_TEST
 
 
 START_TEST(test_slip39_get_word) {
-  const char * a;
-  a = get_word(0);
-  ck_assert_str_eq(a, "academic");
+    static const struct {
+        const int index;
+        const char *expected_word;
+    } vectors[] = {
+        {
+            573,
+            "member"
+        },
+        {
+            0,
+            "academic"
+        },
+        {
+            1023,
+            "zero"
+        },
+        {
+            245,
+            "drove"
+        },
+        {
+            781,
+            "satoshi"
+        }   
+    };
+    for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++){
+        const char *a = get_word(vectors[i].index);
+        ck_assert_str_eq(a, vectors[i].expected_word);
+    }
+}
+END_TEST
+
+
+START_TEST(test_slip39_word_index) {
+    static struct{
+        uint16_t index;
+        const char *word;
+        uint8_t word_length;
+        bool expected_result;
+        uint16_t expected_index;
+    } vectors[] = {
+        {
+            0,
+            "academic",
+            9,
+            true,
+            0
+        },
+        {
+            0,
+            "zero",
+            5,
+            true,
+            1023
+        },
+        {
+            0,
+            "drove",
+            6,
+            true,
+            245
+        },
+        {
+            0,
+            "satoshi",
+            8,
+            true,
+            781
+        },
+        {
+            0,
+            "member",
+            7,
+            true,
+            573
+        }
+    };
+    for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++){
+        bool result = word_index(&vectors[i].index, vectors[i].word, vectors[i].word_length);
+        ck_assert_int_eq(result, vectors[i].expected_result);
+        ck_assert_int_eq(vectors[i].index, vectors[i].expected_index);
+    }
+}
+END_TEST
+
+START_TEST(test_slip39_compute_mask){
+    static const struct {
+        const uint16_t prefix;
+        const uint16_t expected_mask;
+    } vectors[] = {
+        {
+            12,
+            253 //base 10 of 011111101
+        },
+        {
+            21,
+            248 //base 10 of 011111000
+        },
+        {
+            75,
+            173 //base 10 of 010101101
+        },
+        {
+            4,
+            503 //base 10 of 111110111
+        },
+        {
+            738,
+            109 //base 10 of 001101101
+        },
+        {
+            9,
+            109 //base 10 of 001101101
+        }
+    };
+    for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++){
+        uint16_t mask = compute_mask(vectors[i].prefix);
+        ck_assert_int_eq(mask, vectors[i].expected_mask);
+    }
+}
+END_TEST
+
+START_TEST(test_slip39_sequence_to_word) {
+    static const struct {
+        const uint16_t prefix;
+        const char * expected_word;
+    } vectors[] = {
+        {
+            7945,
+            "swimming"
+        },
+        {
+            646,
+            "photo"
+        },
+        {
+            5,
+            "kernel"
+        },
+        {
+            34,
+            "either"
+        },
+        {
+            62,
+            "ocean"
+        }
+    };
+    for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++){
+        const char * word = button_sequence_to_word(vectors[i].prefix);
+        ck_assert_str_eq(word, vectors[i].expected_word);
+    }
 }
 END_TEST
 
@@ -8687,6 +8836,9 @@ Suite *test_suite(void) {
 
   tc = tcase_create("slip39");
   tcase_add_test(tc, test_slip39_get_word);
+  tcase_add_test(tc, test_slip39_word_index);
+  tcase_add_test(tc, test_slip39_compute_mask);
+  tcase_add_test(tc, test_slip39_sequence_to_word);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("shamir");

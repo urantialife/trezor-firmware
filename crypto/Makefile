@@ -71,7 +71,7 @@ SRCS  += slip39.c
 OBJS   = $(SRCS:.c=.o)
 
 TESTLIBS = $(shell pkg-config --libs check) -lpthread -lm
-TESTSSLLIBS = $(shell pkg-config --libs openssl)
+TESTSSLLIBS = $(shell pkg-config --libs openssl) -lm
 
 all: tools tests
 
@@ -89,7 +89,7 @@ tests/test_check: tests/test_check.o $(OBJS)
 	$(CC) tests/test_check.o $(OBJS) $(TESTLIBS) -o tests/test_check
 
 tests/test_speed: tests/test_speed.o $(OBJS)
-	$(CC) tests/test_speed.o $(OBJS) -o tests/test_speed
+	$(CC) tests/test_speed.o $(OBJS) -lm -o tests/test_speed
 
 tests/test_openssl: tests/test_openssl.o $(OBJS)
 	$(CC) tests/test_openssl.o $(OBJS) $(TESTSSLLIBS) -o tests/test_openssl
@@ -100,13 +100,13 @@ tests/libtrezor-crypto.so: $(SRCS)
 tools: tools/xpubaddrgen tools/mktable tools/bip39bruteforce
 
 tools/xpubaddrgen: tools/xpubaddrgen.o $(OBJS)
-	$(CC) tools/xpubaddrgen.o $(OBJS) -o tools/xpubaddrgen
+	$(CC) tools/xpubaddrgen.o $(OBJS) -lm -o tools/xpubaddrgen
 
 tools/mktable: tools/mktable.o $(OBJS)
-	$(CC) tools/mktable.o $(OBJS) -o tools/mktable
+	$(CC) tools/mktable.o $(OBJS) -lm -o tools/mktable
 
 tools/bip39bruteforce: tools/bip39bruteforce.o $(OBJS)
-	$(CC) tools/bip39bruteforce.o $(OBJS) -o tools/bip39bruteforce
+	$(CC) tools/bip39bruteforce.o $(OBJS) -lm -o tools/bip39bruteforce
 
 clean:
 	rm -f *.o aes/*.o chacha20poly1305/*.o ed25519-donna/*.o
