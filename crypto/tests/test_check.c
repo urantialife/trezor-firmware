@@ -5133,43 +5133,38 @@ END_TEST
 
 
 START_TEST(test_slip39_word_index) {
-    static struct{
-        uint16_t index;
+    uint16_t index; 
+    static const struct{
         const char *word;
         uint8_t word_length;
         bool expected_result;
         uint16_t expected_index;
     } vectors[] = {
         {
-            0,
             "academic",
             9,
             true,
             0
         },
         {
-            0,
             "zero",
             5,
             true,
             1023
         },
         {
-            0,
             "drove",
             6,
             true,
             245
         },
         {
-            0,
             "satoshi",
             8,
             true,
             781
         },
         {
-            0,
             "member",
             7,
             true,
@@ -5177,9 +5172,9 @@ START_TEST(test_slip39_word_index) {
         }
     };
     for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++){
-        bool result = word_index(&vectors[i].index, vectors[i].word, vectors[i].word_length);
+        bool result = word_index(&index, vectors[i].word, vectors[i].word_length);
         ck_assert_int_eq(result, vectors[i].expected_result);
-        ck_assert_int_eq(vectors[i].index, vectors[i].expected_index);
+        ck_assert_int_eq(index, vectors[i].expected_index);
     }
 }
 END_TEST
