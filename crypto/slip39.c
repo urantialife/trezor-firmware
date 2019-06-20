@@ -25,7 +25,6 @@
 // TODO: unit tests
 
 #include "slip39.h"
-#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include "slip39_wordlist.h"
@@ -87,6 +86,7 @@ uint16_t find(uint16_t prefix, bool find_index) {
   uint16_t max = 0;
   uint16_t for_max = 0;
   uint8_t multiplier = 0;
+  uint8_t divider = 0;
   uint16_t bitmap = 0;
   uint8_t digit = 0;
   uint16_t i = 0;
@@ -114,7 +114,22 @@ uint16_t find(uint16_t prefix, bool find_index) {
         return i;
       }
 
-      digit = (words_button_seq[i] / (uint8_t)pow(10, multiplier - 1)) % 10;
+      switch (multiplier) {
+        case 1:
+          divider = 1;
+          break;
+        case 2:
+          divider = 10;
+          break;
+        case 3:
+          divider = 100;
+          break;
+        default:
+          divider = 1;
+          break;
+      }
+
+      digit = (words_button_seq[i] / divider) % 10;
       bitmap |= 1 << (digit - 1);
     }
     i++;

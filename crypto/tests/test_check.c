@@ -5119,9 +5119,14 @@ START_TEST(test_slip39_word_index) {
     const char *word;
     bool expected_result;
     uint16_t expected_index;
-  } vectors[] = {{"academic", true, 0}, {"zero", true, 1023},
-                 {"drove", true, 245},  {"satoshi", true, 781},
-                 {"member", true, 573}, {"fakeword", false, 1234}};
+  } vectors[] = {
+      {"academic", true, 0},
+      {"zero", true, 1023},
+      {"drove", true, 245},
+      {"satoshi", true, 781},
+      {"member", true, 573},
+      {"fakeword", false,
+       1234}};  // 1234 value is never checked since the word is not in list
   for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++) {
     bool result = word_index(&index, vectors[i].word, sizeof(vectors[i].word));
     ck_assert_int_eq(result, vectors[i].expected_result);
