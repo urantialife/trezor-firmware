@@ -122,6 +122,7 @@ SOURCE_MOD_SECP256K1_ZKP += [
 # modtrezorio
 SOURCE_MOD += [
     'embed/extmod/modtrezorio/ff.c',
+    'embed/extmod/modtrezorio/ffunicode.c',
     'embed/extmod/modtrezorio/modtrezorio.c',
 ]
 
